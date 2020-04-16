@@ -1,10 +1,5 @@
 // search org for "@AuraEnabled"
 // make note of all classes that belong to your app that compe up in the results
-// create map of permission sets and confirm they don't already have access to the specific classes
-
-// map of perm sets
-// map of classes
-// get all permission for classes, if read permissoin exist already remove, if not create permission
 
 // to test:
 // turn on critical update, login as user with targeted permission set and try to initiate call to AuraEnabled method.  Should receive error modal with red background colored header immediately.
