@@ -59,7 +59,7 @@ for (PermissionSet permSet : mapPermissionSets.values()) {
             }
         }
 
-
+        // permissionForClassExists prevents already existing SetupEntityAccess relationship from being created and causing runtime error
         if (!permissionForClassExists) {
             SetupEntityAccess accessSetup = new SetupEntityAccess(
                     ParentId = permSet.Id,
