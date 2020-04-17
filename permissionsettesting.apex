@@ -11,6 +11,9 @@
 // run script
 // retest method call
 
+String classNameAppPrefix = 'APPNAME';
+Boolean useManualList = true;
+
 List<String> apiNamesOfClassesToAddAccessTo = new List<String>{
         'Error_Logger',
         'SearchController'
@@ -27,52 +30,50 @@ Map<Id, PermissionSet> mapPermissionSets = new Map<Id, PermissionSet> (
     ]
 );
 
-Map<Id, Apexclass> mapApexClasses = new Map<Id, Apexclass>(
-   [
-        SELECT Id, Name,
-        (   
-                SELECT 
-                Id,
-                SetupEntityId,
-                Parent.Name,
-                ParentId,
-                Parent.Profile.Name
-                FROM SetupEntityAccessItems
-                WHERE Parent.Name IN: permissionSetsNeedingAccess
-        )
-        FROM ApexClass 
-        where Name in:apiNamesOfClassesToAddAccessTo
-   ]
-);
+Map<Id, ApexClass> mapApexClasses;
+if (useManualList) {
+    mapApexClasses = new Map<Id, Apexclass>(
+            [
+                    SELECT Id, Name
+                    FROM ApexClass
+                    where Name in:apiNamesOfClassesToAddAccessTo
+            ]
+    );
+} else {
+    String wildCardOfAppPrefix = '%' + classNameAppPrefix + '%';
+            mapApexClasses = new Map<Id, Apexclass>(
+            [
+                    SELECT Id, Name
+                    FROM ApexClass
+                    where Name LIKE :wildCardOfAppPrefix
+            ]
+    );
+}
 
 
 List<SetupEntityAccess> setupEntityAccesses = new List<SetupEntityAccess>();
-
 for (PermissionSet permSet : mapPermissionSets.values()) {
     for (ApexClass apxClass : mapApexClasses.values()) {
-
-        Boolean permissionForClassExists = false;
-        for (SetupEntityAccess access : apxClass.SetupEntityAccessItems) {
-
-            if (access.ParentId == permSet.Id) {
-                permissionForClassExists = true;
-            }
-        }
-
-        // permissionForClassExists prevents already existing SetupEntityAccess relationship from being created and causing runtime error
-        if (!permissionForClassExists) {
             SetupEntityAccess accessSetup = new SetupEntityAccess(
                     ParentId = permSet.Id,
                     SetupEntityId = apxClass.Id
             );
 
             setupEntityAccesses.add(accessSetup);
-        }
-        
     }
 }
 
-insert setupEntityAccesses;
+List<Database.SaveResult> saveResults = Database.insert(setupEntityAccesses, false); 
+System.debug(LoggingLevel.ERROR, 'HERE IS saveResults amount: ' + saveResults.size() );
+
+for (Integer i = 0; i < setupEntityAccesses.size(); i++) {
+    Database.SaveResult saveResult = saveResults[i];
+    SetupEntityAccess supAccess = setupEntityAccesses[i];
+    if (!saveResult.isSuccess()) {
+        System.debug(LoggingLevel.ERROR, 'HERE IS the Class and PermSet combo that failed:' + 'Apex Class - ' + mapApexClasses.get(supAccess.SetupEntityId).Name + ' : PermSet - ' + mapPermissionSets.get(supAccess.ParentId).Name  );
+    }
+}
+
 
 
 ///////////////////////////////////////////////
@@ -108,7 +109,7 @@ List<SetupEntityAccess> setupEntityAccessesToDelete = [
 ];
 
 for (SetupEntityAccess access : setupEntityAccessesToDelete) {
-    System.debug(LoggingLevel.ERROR, 'HERE BE access name: ' + access.Parent.Name);
+    System.debug(LoggingLevel.ERROR, 'HERE BE access name: ' + access.Parent.Name); 
     System.debug(LoggingLevel.ERROR, 'HERE BE the clas: ' + access.SetupEntityId);
 }
 
