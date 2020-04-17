@@ -71,6 +71,9 @@ for (Integer i = 0; i < setupEntityAccesses.size(); i++) {
     SetupEntityAccess supAccess = setupEntityAccesses[i];
     if (!saveResult.isSuccess()) {
         System.debug(LoggingLevel.ERROR, 'HERE IS the Class and PermSet combo that failed:' + 'Apex Class - ' + mapApexClasses.get(supAccess.SetupEntityId).Name + ' : PermSet - ' + mapPermissionSets.get(supAccess.ParentId).Name  );
+        for(Database.Error err : saveResult.getErrors()) {
+            System.debug('Status Code: ' + err.getStatusCode() + ': Error Message' + err.getMessage());
+        }
     }
 }
 
