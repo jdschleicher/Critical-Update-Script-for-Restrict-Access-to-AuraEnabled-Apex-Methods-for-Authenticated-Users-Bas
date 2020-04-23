@@ -1,5 +1,7 @@
+// If using Manual List:
 // search org for "@AuraEnabled"
 // make note of all classes that belong to your app that compe up in the results
+// add to String list varialbe "apiNamesOfClassesToAddAccessTo"
 
 // to test:
 // turn on critical update, login as user with targeted permission set and try to initiate call to AuraEnabled method.  Should receive error modal with red background colored header immediately.
